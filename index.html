@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro Presenze Cantiere</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin: 30px; }
+    #reader { width: 300px; margin: auto; }
+    button { margin-top: 10px; padding: 10px 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h2>Registrazione Presenze Cantiere</h2>
+  <div id="reader"></div>
+  <p id="message"></p>
+
+  <script>
+    function logPresence(data) {
+      fetch('https://sheetdb.io/api/v1/YOUR_SHEETDB_ID', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data: [{
+            "timestamp": new Date().toLocaleString(),
+            "nome": data.nome,
+            "azienda": data.azienda,
+            "azione": data.azione
+          }]
+        })
+      }).then(r => r.json()).then(r => {
+        document.getElementById("message").innerText = "Presenza registrata con successo!";
+      }).catch(e => alert("Errore: " + e));
+    }
+
+    function startScanner() {
+      let html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        qrCodeMessage => {
+          let data = JSON.parse(qrCodeMessage);
+          logPresence(data);
+          html5QrCode.stop();
+        },
+        errorMessage => {}
+      );
+    }
+    startScanner();
+  </script>
+</body>
+</html>
